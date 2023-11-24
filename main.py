@@ -4,6 +4,10 @@
 import argparse
 from data_utils import importFASTA, tokenizedSequences
 
+
+# Redundant code, but I'm keeping it here for now...
+
+"""
 def main():
     parser = argparse.ArgumentParser(description="Process FASTA sequences")
     parser.add_argument("fasta_file", type=str, help="Path to FASTA file")
@@ -31,3 +35,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+"""
