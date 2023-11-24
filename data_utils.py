@@ -5,6 +5,7 @@
 import torch
 from torch.utils.data import Dataset
 from Bio import SeqIO
+from torch.nn.utils.rnn import pad_sequence
 
 def importFASTA(file_path):
     with open(file_path, "r") as file:
@@ -30,3 +31,9 @@ class PP_Dataset(Dataset):
         input_sequence = sequence[:-1]
         target_sequence = sequence[1:]
         return input_sequence, target_sequence
+
+def collate_batch(batch):
+    input_seqs, target_seqs = zip(*batch)
+    input_seqs_padded = pad_sequence(input_seqs, batch_first=True, padding_value=0)
+    target_seqs_padded = pad_sequence(target_seqs, batch_first=True, padding_value=0)
+    return input_seqs_padded, target_seqs_padded
