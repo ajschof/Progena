@@ -177,3 +177,6 @@ cython_debug/
 
 # Fasta Files
 *.fasta
+
+# pytorch checkpoints
+*.pth
