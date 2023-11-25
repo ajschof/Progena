@@ -3,12 +3,13 @@
 
 import argparse
 from torch.utils.data import DataLoader
-from data_utils import import_fasta, tokenized_sequences, pp_dataset, collate_batch
+from data_utils import import_fasta, tokenize_sequences, pp_dataset, collate_batch
 from training_utils import start
 
 def main():
     parser = argparse.ArgumentParser(description="Process FASTA sequences")
     parser.add_argument("fasta_file", type=str, help="Path to FASTA file")
+    parser.add_argument('--checkpoint', type=str, help='Path to a saved checkpoint', default=None)
     args = parser.parse_args()
 
     try:
@@ -20,7 +21,7 @@ def main():
         return
 
     try:
-        tokenized_seqs, aa_idx, _ = tokenized_sequences(sequences)
+        tokenized_seqs, aa_idx, _ = tokenize_sequences(sequences)
         print("✅ Tokenized sequences")
     except Exception as e:
         print("❌ Failed to tokenize sequences")

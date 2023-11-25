@@ -40,9 +40,9 @@ class pp_dataset(Dataset):
         sequence = self.tokenize_sequences[index]
         input_sequence = sequence[:-1]
         target_sequence = sequence[1:]
-        print(
-            f"__getitem__ index: {index}, input: {input_sequence.size()}, target: {target_sequence.size()}"
-        )
+        # print(
+        #     f"__getitem__ index: {index}, input: {input_sequence.size()}, target: {target_sequence.size()}"
+        # )
         return input_sequence, target_sequence
 
 
@@ -50,7 +50,7 @@ def collate_batch(batch):
     input_seqs, target_seqs = zip(*batch)
     input_seqs_padded = pad_sequence(input_seqs, batch_first=True, padding_value=0)
     target_seqs_padded = pad_sequence(target_seqs, batch_first=True, padding_value=0)
-    print(
-        f"collate_batch: input shape {input_seqs_padded.shape}, target shape {target_seqs_padded.shape}"
-    )
+    # print(
+    #     f"collate_batch: input shape {input_seqs_padded.shape}, target shape {target_seqs_padded.shape}"
+    # )
     return input_seqs_padded, target_seqs_padded

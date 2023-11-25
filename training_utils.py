@@ -30,28 +30,41 @@ class LSTMModel(nn.Module):
         return hidden
 
 
+def save_checkpoint(state, filepath):
+    torch.save(state, filepath)
+
+
+def load_checkpoint(filepath, model, optimizer, device):
+    checkpoint = torch.load(filepath, map_location=device)
+    model.load_state_dict(checkpoint['model_state_dict'])
+    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    return checkpoint['epoch'], checkpoint['train_loss'], checkpoint['val_loss']
+
+
 def train(model, train_loader, criterion, optimizer, device, epoch, num_epochs):
     model.train()
+    total_loss = 0
+
     for batch, (inputs, targets) in enumerate(train_loader):
-        print(f"Batch {batch}: inputs {inputs.shape}, targets {targets.shape}")
+        # One-hot encode inputs and move to device
+        inputs_one_hot = torch.nn.functional.one_hot(inputs, num_classes=model.input_size).float()
+        inputs_one_hot, targets = inputs_one_hot.to(device), targets.to(device)
 
-        inputs_one_hot = torch.nn.functional.one_hot(
-            inputs, num_classes=model.input_size
-        ).float()
-        inputs_one_hot = inputs_one_hot.to(device)
-
-        targets = targets.view(-1).to(device)
-
+        # Forward pass and loss computation
         optimizer.zero_grad()
-
         output, _ = model(inputs_one_hot)
-
-        loss = criterion(output, targets)
-
+        loss = criterion(output, targets.view(-1))
         loss.backward()
         optimizer.step()
 
-        print(f"Epoch {epoch+1}/{num_epochs}, Batch {batch}, Loss: {loss.item()}")
+        # Accumulate loss and print per batch
+        batch_loss = loss.item()
+        total_loss += batch_loss
+        print(f"Epoch {epoch+1}/{num_epochs}, Batch {batch+1}, Loss: {batch_loss}")
+
+    # Calculate and return the average loss for the epoch
+    average_loss = total_loss / len(train_loader)
+    return average_loss
 
 
 def validate(model, val_loader, criterion, device):
@@ -66,15 +79,14 @@ def validate(model, val_loader, criterion, device):
     return total_loss / len(val_loader)
 
 
-def start(
-    input_size,
-    hidden_size,
-    output_size,
-    num_layers,
-    num_epochs,
-    train_loader,
-    val_loader=None,
-):
+def start(input_size,
+          hidden_size,
+          output_size,
+          num_layers,
+          num_epochs,
+          train_loader,
+          val_loader=None):
+    
     if torch.cuda.is_available():
         device = torch.device("cuda")
         print("CUDA is available")
@@ -89,8 +101,19 @@ def start(
     optimizer = torch.optim.Adam(model.parameters())
 
     for epoch in range(num_epochs):
-        train(model, train_loader, criterion, optimizer, device, epoch, num_epochs)
+        train_loss = train(model, train_loader, criterion, optimizer, device, epoch, num_epochs)
 
+        val_loss = None
         if val_loader is not None:
             val_loss = validate(model, val_loader, criterion, device)
             print(f"Validation Loss after Epoch {epoch+1}: {val_loss}")
+
+        checkpoint = {
+            'epoch': epoch + 1,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'train_loss': train_loss,
+            'val_loss': val_loss
+        }
+        save_checkpoint(checkpoint, f"checkpoint_epoch_{epoch+1}.pth")
+
