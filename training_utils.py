@@ -46,8 +46,6 @@ def train(model, train_loader, criterion, optimizer, device, epoch, num_epochs):
 
         output, _ = model(inputs_one_hot)
 
-        # targets = targets[:, -1]
-
         loss = criterion(output, targets)
 
         loss.backward()

@@ -16,7 +16,7 @@ def import_fasta(file_path):
             yield sequence
 
 
-def tokenized_sequences(sequences):
+def tokenize_sequences(sequences):
     amino_acids = sorted(set("".join(sequences)))
     aa_idx = {aa: idx for idx, aa in enumerate(amino_acids)}
     idx_aa = {idx: aa for aa, idx in aa_idx.items()}
@@ -30,14 +30,14 @@ def tokenized_sequences(sequences):
 
 
 class pp_dataset(Dataset):
-    def __init__(self, tokenized_sequences):
-        self.tokenized_sequences = tokenized_sequences
+    def __init__(self, tokenize_sequences):
+        self.tokenize_sequences = tokenize_sequences
 
     def __len__(self):
-        return len(self.tokenized_sequences)
+        return len(self.tokenize_sequences)
 
     def __getitem__(self, index):
-        sequence = self.tokenized_sequences[index]
+        sequence = self.tokenize_sequences[index]
         input_sequence = sequence[:-1]
         target_sequence = sequence[1:]
         print(
