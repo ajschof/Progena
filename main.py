@@ -1,14 +1,13 @@
 import argparse
-from torch.utils.data import DataLoader
 import torch
-from torch.nn.utils.rnn import pad_sequence
-from torch.utils.data import Dataset
-from Bio import SeqIO
 import torch.nn as nn
+from torch.utils.data import DataLoader, Dataset
+from torch.nn.utils.rnn import pad_sequence
+from Bio import SeqIO
 
 
 def import_fasta(file_path):
-    with open(file_path, "r") as file:
+    with open(file_path, "r", encoding="utf-8") as file:
         for record in SeqIO.parse(file, "fasta"):
             sequence = str(record.seq)
             yield sequence
