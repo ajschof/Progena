@@ -9,6 +9,7 @@ from torch.utils.data import Dataset
 from Bio import SeqIO
 import torch.nn as nn
 
+
 def import_fasta(file_path):
     with open(file_path, "r") as file:
         for record in SeqIO.parse(file, "fasta"):
@@ -55,6 +56,7 @@ def collate_batch(batch):
     #     f"collate_batch: input shape {input_seqs_padded.shape}, target shape {target_seqs_padded.shape}"
     # )
     return input_seqs_padded, target_seqs_padded
+
 
 class LSTMModel(nn.Module):
     def __init__(self, input_size, hidden_size, output_size, num_layers):
