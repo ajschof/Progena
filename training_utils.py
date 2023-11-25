@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
+
+
 class LSTMModel(nn.Module):
     def __init__(self, input_size, hidden_size, output_size, num_layers):
         super(LSTMModel, self).__init__()
@@ -20,18 +22,22 @@ class LSTMModel(nn.Module):
         output = self.fc(output)
         return output, hidden
 
-
     def init_hidden(self, batch_size, device):
-        hidden = (torch.zeros(self.num_layers, batch_size, self.hidden_size).to(device),
-                torch.zeros(self.num_layers, batch_size, self.hidden_size).to(device))
+        hidden = (
+            torch.zeros(self.num_layers, batch_size, self.hidden_size).to(device),
+            torch.zeros(self.num_layers, batch_size, self.hidden_size).to(device),
+        )
         return hidden
+
 
 def train(model, train_loader, criterion, optimizer, device, epoch, num_epochs):
     model.train()
     for batch, (inputs, targets) in enumerate(train_loader):
         print(f"Batch {batch}: inputs {inputs.shape}, targets {targets.shape}")
 
-        inputs_one_hot = torch.nn.functional.one_hot(inputs, num_classes=model.input_size).float()
+        inputs_one_hot = torch.nn.functional.one_hot(
+            inputs, num_classes=model.input_size
+        ).float()
         inputs_one_hot = inputs_one_hot.to(device)
 
         targets = targets.view(-1).to(device)
@@ -49,6 +55,7 @@ def train(model, train_loader, criterion, optimizer, device, epoch, num_epochs):
 
         print(f"Epoch {epoch+1}/{num_epochs}, Batch {batch}, Loss: {loss.item()}")
 
+
 def validate(model, val_loader, criterion, device):
     model.eval()
     total_loss = 0
@@ -60,7 +67,16 @@ def validate(model, val_loader, criterion, device):
             total_loss += loss.item()
     return total_loss / len(val_loader)
 
-def run_training_process(input_size, hidden_size, output_size, num_layers, num_epochs, train_loader, val_loader=None):
+
+def start(
+    input_size,
+    hidden_size,
+    output_size,
+    num_layers,
+    num_epochs,
+    train_loader,
+    val_loader=None,
+):
     if torch.cuda.is_available():
         device = torch.device("cuda")
         print("CUDA is available")
