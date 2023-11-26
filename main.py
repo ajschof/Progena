@@ -87,6 +87,8 @@ class LSTMModel(nn.Module):
 def train(model, train_loader, criterion, optimizer, device, epoch, num_epochs):
     model.train()
     total_loss = 0
+    correct_predictions = 0
+    total_predictions = 0
     num_batches = len(train_loader)
 
     for batch, (inputs, targets) in enumerate(train_loader):
@@ -106,15 +108,24 @@ def train(model, train_loader, criterion, optimizer, device, epoch, num_epochs):
         # Accumulate loss
         total_loss += loss.item()
 
-        # Calculate and display percentage completed
+        # Calculate accuracy
+        _, predicted = torch.max(output.data, 1)
+        correct_predictions += (predicted == targets.view(-1)).sum().item()
+        total_predictions += targets.numel()
+
+        # Calculate and display percentage completed along with loss and accuracy
         percentage_completed = 100 * (batch + 1) / num_batches
+        average_loss = total_loss / (batch + 1)
+        accuracy = correct_predictions / total_predictions
+
         sys.stdout.write(
-            f"\r{Fore.GREEN}{Style.BRIGHT}Epoch {epoch+1}/{num_epochs}, Batch {batch+1}/{num_batches}, {percentage_completed:.2f}% completed{Style.RESET_ALL}"
+            f"\r{Fore.GREEN}{Style.BRIGHT}Training... {percentage_completed:.2f}% | Epoch {epoch+1}/{num_epochs}, Batch {batch+1}/{num_batches}, Train Loss: {average_loss:.4f}, Train Acc: {accuracy * 100:.2f}%{Style.RESET_ALL}"
         )
+
         sys.stdout.flush()
 
     print()  # To move to the next line after the last batch
-    return total_loss / num_batches
+    return total_loss / num_batches, accuracy
 
 
 
@@ -141,13 +152,13 @@ def start(
 ):
     if torch.cuda.is_available():
         device = torch.device("cuda")
-        print("CUDA is available")
+        print("✅ CUDA is available")
     elif torch.backends.mps.is_available():
         device = torch.device("mps")
-        print("MPS is available")
+        print("✅ MPS is available")
     else:
         device = torch.device("cpu")
-        print("CUDA and MPS are not available, falling back to CPU")
+        print("❌ CUDA and MPS are not available, falling back to CPU")
     model = LSTMModel(input_size, hidden_size, output_size, num_layers).to(device)
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters())
