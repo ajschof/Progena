@@ -1,9 +1,11 @@
 import argparse
+import sys
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset
 from torch.nn.utils.rnn import pad_sequence
 from Bio import SeqIO
+from colorama import Fore, Style
 
 
 def import_fasta(file_path):
@@ -85,6 +87,7 @@ class LSTMModel(nn.Module):
 def train(model, train_loader, criterion, optimizer, device, epoch, num_epochs):
     model.train()
     total_loss = 0
+    num_batches = len(train_loader)
 
     for batch, (inputs, targets) in enumerate(train_loader):
         # One-hot encode inputs and move to device
@@ -100,14 +103,19 @@ def train(model, train_loader, criterion, optimizer, device, epoch, num_epochs):
         loss.backward()
         optimizer.step()
 
-        # Accumulate loss and print per batch
-        batch_loss = loss.item()
-        total_loss += batch_loss
-        print(f"Epoch {epoch+1}/{num_epochs}, Batch {batch+1}, Loss: {batch_loss}")
+        # Accumulate loss
+        total_loss += loss.item()
 
-    # Calculate and return the average loss for the epoch
-    average_loss = total_loss / len(train_loader)
-    return average_loss
+        # Calculate and display percentage completed
+        percentage_completed = 100 * (batch + 1) / num_batches
+        sys.stdout.write(
+            f"\r{Fore.GREEN}{Style.BRIGHT}Epoch {epoch+1}/{num_epochs}, Batch {batch+1}/{num_batches}, {percentage_completed:.2f}% completed{Style.RESET_ALL}"
+        )
+        sys.stdout.flush()
+
+    print()  # To move to the next line after the last batch
+    return total_loss / num_batches
+
 
 
 def validate(model, val_loader, criterion, device):
