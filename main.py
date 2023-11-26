@@ -71,15 +71,15 @@ class LSTMModel(nn.Module):
         return hidden
 
 
-def save_checkpoint(state, filepath):
-    torch.save(state, filepath)
+# def save_checkpoint(state, filepath):
+#     torch.save(state, filepath)
 
 
-def load_checkpoint(filepath, model, optimizer, device):
-    checkpoint = torch.load(filepath, map_location=device)
-    model.load_state_dict(checkpoint["model_state_dict"])
-    optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
-    return checkpoint["epoch"], checkpoint["train_loss"], checkpoint["val_loss"]
+# def load_checkpoint(filepath, model, optimizer, device):
+#     checkpoint = torch.load(filepath, map_location=device)
+#     model.load_state_dict(checkpoint["model_state_dict"])
+#     optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+#     return checkpoint["epoch"], checkpoint["train_loss"], checkpoint["val_loss"]
 
 
 def train(model, train_loader, criterion, optimizer, device, epoch, num_epochs):
@@ -154,22 +154,22 @@ def start(
             val_loss = validate(model, val_loader, criterion, device)
             print(f"Validation Loss after Epoch {epoch+1}: {val_loss}")
 
-        checkpoint = {
-            "epoch": epoch + 1,
-            "model_state_dict": model.state_dict(),
-            "optimizer_state_dict": optimizer.state_dict(),
-            "train_loss": train_loss,
-            "val_loss": val_loss,
-        }
-        save_checkpoint(checkpoint, f"checkpoint_epoch_{epoch+1}.pth")
+        # checkpoint = {
+        #     "epoch": epoch + 1,
+        #     "model_state_dict": model.state_dict(),
+        #     "optimizer_state_dict": optimizer.state_dict(),
+        #     "train_loss": train_loss,
+        #     "val_loss": val_loss,
+        # }
+        # save_checkpoint(checkpoint, f"checkpoint_epoch_{epoch+1}.pth")
 
 
 def main():
     parser = argparse.ArgumentParser(description="Process FASTA sequences")
     parser.add_argument("fasta_file", type=str, help="Path to FASTA file")
-    parser.add_argument(
-        "--checkpoint", type=str, help="Path to a saved checkpoint", default=None
-    )
+    # parser.add_argument(
+    #     "--checkpoint", type=str, help="Path to a saved checkpoint", default=None
+    # )
     args = parser.parse_args()
 
     try:
