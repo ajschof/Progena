@@ -1,14 +1,15 @@
 import argparse
-from torch.utils.data import DataLoader
+import sys
 import torch
-from torch.nn.utils.rnn import pad_sequence
-from torch.utils.data import Dataset
-from Bio import SeqIO
 import torch.nn as nn
+from torch.utils.data import DataLoader, Dataset, random_split
+from torch.nn.utils.rnn import pad_sequence
+from Bio import SeqIO
+from colorama import Fore, Style
 
 
 def import_fasta(file_path):
-    with open(file_path, "r") as file:
+    with open(file_path, "r", encoding="utf-8") as file:
         for record in SeqIO.parse(file, "fasta"):
             sequence = str(record.seq)
             yield sequence
@@ -72,20 +73,12 @@ class LSTMModel(nn.Module):
         return hidden
 
 
-def save_checkpoint(state, filepath):
-    torch.save(state, filepath)
-
-
-def load_checkpoint(filepath, model, optimizer, device):
-    checkpoint = torch.load(filepath, map_location=device)
-    model.load_state_dict(checkpoint["model_state_dict"])
-    optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
-    return checkpoint["epoch"], checkpoint["train_loss"], checkpoint["val_loss"]
-
-
 def train(model, train_loader, criterion, optimizer, device, epoch, num_epochs):
     model.train()
     total_loss = 0
+    correct_predictions = 0
+    total_predictions = 0
+    num_batches = len(train_loader)
 
     for batch, (inputs, targets) in enumerate(train_loader):
         # One-hot encode inputs and move to device
@@ -101,26 +94,64 @@ def train(model, train_loader, criterion, optimizer, device, epoch, num_epochs):
         loss.backward()
         optimizer.step()
 
-        # Accumulate loss and print per batch
-        batch_loss = loss.item()
-        total_loss += batch_loss
-        print(f"Epoch {epoch+1}/{num_epochs}, Batch {batch+1}, Loss: {batch_loss}")
+        # Accumulate loss
+        total_loss += loss.item()
 
-    # Calculate and return the average loss for the epoch
-    average_loss = total_loss / len(train_loader)
-    return average_loss
+        # Calculate accuracy
+        _, predicted = torch.max(output.data, 1)
+        correct_predictions += (predicted == targets.view(-1)).sum().item()
+        total_predictions += targets.numel()
+
+        # Calculate and display percentage completed along with loss and accuracy
+        percentage_completed = 100 * (batch + 1) / num_batches
+        average_loss = total_loss / (batch + 1)
+        accuracy = correct_predictions / total_predictions
+
+        sys.stdout.write(
+            f"\r{Fore.YELLOW}{Style.BRIGHT}Training... {percentage_completed:.2f}% | Epoch {epoch+1}/{num_epochs}, Batch {batch+1}/{num_batches}, Train Loss: {average_loss:.4f}, Train Acc: {accuracy * 100:.2f}%{Style.RESET_ALL}"
+        )
+
+        sys.stdout.flush()
+
+    print(f"🚂 Finished training for Epoch {epoch+1}/{num_epochs}")
+    return total_loss / num_batches, accuracy
 
 
-def validate(model, val_loader, criterion, device):
+def validate(model, val_loader, criterion, device, epoch, num_epochs):
+    print("🔍 Starting validation phase...")  # Debug print
     model.eval()
     total_loss = 0
+    correct_predictions = 0
+    total_predictions = 0
+    num_batches = len(val_loader)
+
     with torch.no_grad():
-        for inputs, targets in val_loader:
-            inputs, targets = inputs.to(device), targets.to(device)
-            output, _ = model(inputs)
-            loss = criterion(output, targets)
+        for batch, (inputs, targets) in enumerate(val_loader):
+            inputs_one_hot = torch.nn.functional.one_hot(
+                inputs, num_classes=model.input_size
+            ).float()
+            inputs_one_hot, targets = inputs_one_hot.to(device), targets.to(device)
+
+            output, _ = model(inputs_one_hot)
+            loss = criterion(output, targets.view(-1))
             total_loss += loss.item()
-    return total_loss / len(val_loader)
+
+            _, predicted = torch.max(output.data, 1)
+            correct_predictions += (predicted == targets.view(-1)).sum().item()
+            total_predictions += targets.numel()
+
+            # Calculate and display percentage completed along with loss and accuracy
+            percentage_completed = 100 * (batch + 1) / num_batches
+            average_loss = total_loss / (batch + 1)
+            accuracy = correct_predictions / total_predictions
+
+            sys.stdout.write(
+                f"\r{Fore.CYAN}{Style.BRIGHT}Validating... {percentage_completed:.2f}% | Epoch {epoch+1}/{num_epochs}, Batch {batch+1}/{num_batches}, Val Loss: {average_loss:.4f}, Val Acc: {accuracy * 100:.2f}%{Style.RESET_ALL}"
+            )
+            sys.stdout.flush()
+
+    print(f"\n🚂 Finished training for Epoch {epoch+1}/{num_epochs}")
+    return total_loss / num_batches, accuracy
 
 
 def start(
@@ -130,47 +161,41 @@ def start(
     num_layers,
     num_epochs,
     train_loader,
-    val_loader=None,
+    val_loader,
 ):
     if torch.cuda.is_available():
         device = torch.device("cuda")
-        print("CUDA is available")
+        print("✅ CUDA is available")
     elif torch.backends.mps.is_available():
         device = torch.device("mps")
-        print("MPS is available")
+        print("✅ MPS is available")
     else:
         device = torch.device("cpu")
-        print("CUDA and MPS are not available, falling back to CPU")
+        print("❌ CUDA and MPS are not available, falling back to CPU")
     model = LSTMModel(input_size, hidden_size, output_size, num_layers).to(device)
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters())
 
     for epoch in range(num_epochs):
-        train_loss = train(
+        # Training phase
+        train_loss, train_accuracy = train(
             model, train_loader, criterion, optimizer, device, epoch, num_epochs
         )
 
-        val_loss = None
-        if val_loader is not None:
-            val_loss = validate(model, val_loader, criterion, device)
-            print(f"Validation Loss after Epoch {epoch+1}: {val_loss}")
+        # Validation phase
+        val_loss, val_accuracy = validate(
+            model, val_loader, criterion, device, epoch, num_epochs
+        )
 
-        checkpoint = {
-            "epoch": epoch + 1,
-            "model_state_dict": model.state_dict(),
-            "optimizer_state_dict": optimizer.state_dict(),
-            "train_loss": train_loss,
-            "val_loss": val_loss,
-        }
-        save_checkpoint(checkpoint, f"checkpoint_epoch_{epoch+1}.pth")
+        # Print training and validation results
+        print(
+            f"Epoch {epoch+1}/{num_epochs}, Train Loss: {train_loss:.4f}, Train Acc: {train_accuracy * 100:.2f}%, Val Loss: {val_loss:.4f}, Val Acc: {val_accuracy * 100:.2f}%"
+        )
 
 
 def main():
     parser = argparse.ArgumentParser(description="Process FASTA sequences")
     parser.add_argument("fasta_file", type=str, help="Path to FASTA file")
-    parser.add_argument(
-        "--checkpoint", type=str, help="Path to a saved checkpoint", default=None
-    )
     args = parser.parse_args()
 
     try:
@@ -196,12 +221,27 @@ def main():
     batch_size = 32
     num_epochs = 10
 
-    dataset = pp_dataset(tokenized_seqs)
+    full_dataset = pp_dataset(tokenized_seqs)
+    train_size = int(0.8 * len(full_dataset))  # e.g., 80% for training
+    val_size = len(full_dataset) - train_size  # remainder for validation
+    train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size])
+
     train_loader = DataLoader(
-        dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_batch
+        train_dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_batch
+    )
+    val_loader = DataLoader(
+        val_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_batch
     )
 
-    start(input_size, hidden_size, output_size, num_layers, num_epochs, train_loader)
+    start(
+        input_size,
+        hidden_size,
+        output_size,
+        num_layers,
+        num_epochs,
+        train_loader,
+        val_loader,
+    )
 
 
 if __name__ == "__main__":
