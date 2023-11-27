@@ -117,7 +117,6 @@ def train(model, train_loader, criterion, optimizer, device, epoch, num_epochs):
     return total_loss / num_batches, accuracy
 
 
-
 def validate(model, val_loader, criterion, device, epoch, num_epochs):
     print("🔍 Starting validation phase...")  # Debug print
     model.eval()
@@ -128,7 +127,9 @@ def validate(model, val_loader, criterion, device, epoch, num_epochs):
 
     with torch.no_grad():
         for batch, (inputs, targets) in enumerate(val_loader):
-            inputs_one_hot = torch.nn.functional.one_hot(inputs, num_classes=model.input_size).float()
+            inputs_one_hot = torch.nn.functional.one_hot(
+                inputs, num_classes=model.input_size
+            ).float()
             inputs_one_hot, targets = inputs_one_hot.to(device), targets.to(device)
 
             output, _ = model(inputs_one_hot)
@@ -151,8 +152,6 @@ def validate(model, val_loader, criterion, device, epoch, num_epochs):
 
     print(f"\n🚂 Finished training for Epoch {epoch+1}/{num_epochs}")
     return total_loss / num_batches, accuracy
-
-
 
 
 def start(
@@ -179,13 +178,19 @@ def start(
 
     for epoch in range(num_epochs):
         # Training phase
-        train_loss, train_accuracy = train(model, train_loader, criterion, optimizer, device, epoch, num_epochs)
+        train_loss, train_accuracy = train(
+            model, train_loader, criterion, optimizer, device, epoch, num_epochs
+        )
 
         # Validation phase
-        val_loss, val_accuracy = validate(model, val_loader, criterion, device, epoch, num_epochs)
+        val_loss, val_accuracy = validate(
+            model, val_loader, criterion, device, epoch, num_epochs
+        )
 
         # Print training and validation results
-        print(f"Epoch {epoch+1}/{num_epochs}, Train Loss: {train_loss:.4f}, Train Acc: {train_accuracy * 100:.2f}%, Val Loss: {val_loss:.4f}, Val Acc: {val_accuracy * 100:.2f}%")
+        print(
+            f"Epoch {epoch+1}/{num_epochs}, Train Loss: {train_loss:.4f}, Train Acc: {train_accuracy * 100:.2f}%, Val Loss: {val_loss:.4f}, Val Acc: {val_accuracy * 100:.2f}%"
+        )
 
 
 def main():
@@ -208,7 +213,7 @@ def main():
         print("❌ Failed to tokenize sequences")
         print(e)
         return
-    
+
     input_size = len(aa_idx)
     output_size = len(aa_idx)
     hidden_size = 128
@@ -221,10 +226,22 @@ def main():
     val_size = len(full_dataset) - train_size  # remainder for validation
     train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size])
 
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_batch)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_batch)
+    train_loader = DataLoader(
+        train_dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_batch
+    )
+    val_loader = DataLoader(
+        val_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_batch
+    )
 
-    start(input_size, hidden_size, output_size, num_layers, num_epochs, train_loader, val_loader)
+    start(
+        input_size,
+        hidden_size,
+        output_size,
+        num_layers,
+        num_epochs,
+        train_loader,
+        val_loader,
+    )
 
 
 if __name__ == "__main__":
