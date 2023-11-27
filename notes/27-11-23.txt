@@ -1,0 +1,22 @@
+Date: 27/11/2023
+
+Epoch 100/100, Train Loss: 0.5609, Train Acc: 84.16%, Val Loss: 0.6332, Val Acc: 81.55%
+
+Notes
+
+• There is a consistent improvement over time with training and validation accuracies;
+  training accuracy improved from 72.41% to 84.16% and a similar increase with
+  validation accuracy (the model is learning and not just memorising training data)
+
+• Training and validation accuracies are improving alongside each other with a narrow
+  gap between them, so model is not overfitting significantly
+
+• High validation accuracy is impressive considering the complexity of amino acid
+  sequences, but this is just speculation until I can actually use and test the
+  model
+
+• Training and validation losses are decreasing steadily and appears to not be
+  slowing down anytime soon
+
+• No signs of overfitting that would be apparent by a high training accuracy but
+  low validation accuracy
