@@ -1,0 +1,27 @@
+Progena Dev Notes
+
+Protected Branches:
+
+main (primary branch)
+dev (staging before merge into master)
+
+Temporary Branches:
+
+feature/... (specific features and tasks)
+bugfix/... (quick fixes that don't need immediate resolution, --> dev --> main)
+docs/... (docs changes)
+
+Commits:
+
+Start with...
+
+feat: ... (new feature)
+fix: ... (bug fix)
+perf: ... (performance improvement)
+refactor: ... (code changes that don't fix bugs or adds features)
+style: ... (whitespace, formatting)
+test: ... (testing code)
+docs: ... (for use with docs/... branches)
+other: ... (for things that deviate from the above)
+
+...then give a detailed explanation of what was done
