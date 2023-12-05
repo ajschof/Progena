@@ -1,4 +1,14 @@
-# Progena
+<p align="center">
+  <img src="images/logo.png"
+    width="300" 
+    height="300"/>
+</p>
+
+<h1 align="center">
+Progena
+</h1>
+
+<br>
 
 Watch this space.
 
