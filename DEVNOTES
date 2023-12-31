@@ -3,12 +3,27 @@ Progena Dev Notes
 Protected Branches:
 
 main (primary branch)
-dev (staging before merge into master)
+dev (staging before merge into main)
 
 Branches:
 
-wip/... (experimental functionality or preparation that is not ready for release to main branch)
-feature/... (specific features and tasks that are purposed for release into main branch)
+wip/... (experimental functionality or preparation that is not ready for
+release to main branch)
+
+feature/... (specific features and tasks that are purposed for release into
+main branch)
+
 bug/... (quick/temporary fixes for minor issues into main branch)
-crit/... (vulnerability or broken functionality fixes that need immediate resolution into main branch)
+
+crit/... (vulnerability or broken functionality fixes that need immediate
+resolution into main branch)
+
 docs/... (docs changes)
+
+Merges & Pull Requests:
+
+wip/... and feature/... and docs/... branches should be merged into dev branch
+and then merged into main by pull requests
+
+bug/... & crit/... branches can be merged directly into main if appropriate
+or if time-critical
