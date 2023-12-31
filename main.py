@@ -6,6 +6,10 @@ from torch.utils.data import DataLoader, Dataset, random_split
 from torch.nn.utils.rnn import pad_sequence
 from Bio import SeqIO
 from colorama import Fore, Style
+import matplotlib
+import matplotlib.pyplot as plt
+
+matplotlib.use('TkAgg')
 
 
 def import_fasta(file_path):
@@ -153,6 +157,28 @@ def validate(model, val_loader, criterion, device, epoch, num_epochs):
     print(f"\n🚂 Finished training for Epoch {epoch+1}/{num_epochs}")
     return total_loss / num_batches, accuracy
 
+def plot_metrics(train_losses, val_losses, train_accuracies, val_accuracies, epoch):
+    plt.subplot(1, 2, 1)
+    plt.cla()  # Clear the current axes
+    plt.plot(train_losses, 'bo-', label='Training loss')
+    plt.plot(val_losses, 'r+-', label='Validation loss')
+    plt.title('Training and Validation Loss')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
+
+    plt.subplot(1, 2, 2)
+    plt.cla()  # Clear the current axes
+    plt.plot(train_accuracies, 'bo-', label='Training Accuracy')
+    plt.plot(val_accuracies, 'r+-', label='Validation Accuracy')
+    plt.title('Training and Validation Accuracy')
+    plt.xlabel('Epochs')
+    plt.ylabel('Accuracy')
+    plt.legend()
+
+    plt.pause(0.1)  # Pause to update the plot
+    plt.draw()
+
 
 def start(
     input_size,
@@ -163,6 +189,21 @@ def start(
     train_loader,
     val_loader,
 ):
+    
+    plt.ion()
+    plt.figure(figsize=(12, 5))
+    plt.subplot(1, 2, 1)
+    plt.title('Training and Validation Loss')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
+
+    plt.subplot(1, 2, 2)
+    plt.title('Training and Validation Accuracy')
+    plt.xlabel('Epochs')
+    plt.ylabel('Accuracy')
+    plt.legend()
+
     if torch.cuda.is_available():
         device = torch.device("cuda")
         print("✅ CUDA is available")
@@ -175,6 +216,9 @@ def start(
     model = LSTMModel(input_size, hidden_size, output_size, num_layers).to(device)
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters())
+    
+    train_losses, val_losses = [], []
+    train_accuracies, val_accuracies = [], []
 
     for epoch in range(num_epochs):
         # Training phase
@@ -186,11 +230,18 @@ def start(
         val_loss, val_accuracy = validate(
             model, val_loader, criterion, device, epoch, num_epochs
         )
+        
+        train_losses.append(train_loss)
+        train_accuracies.append(train_accuracy)
+        val_losses.append(val_loss)
+        val_accuracies.append(val_accuracy)
 
         # Print training and validation results
         print(
             f"Epoch {epoch+1}/{num_epochs}, Train Loss: {train_loss:.4f}, Train Acc: {train_accuracy * 100:.2f}%, Val Loss: {val_loss:.4f}, Val Acc: {val_accuracy * 100:.2f}%"
         )
+
+        plot_metrics(train_losses, val_losses, train_accuracies, val_accuracies, epoch)
 
 
 def main():
