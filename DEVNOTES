@@ -5,23 +5,10 @@ Protected Branches:
 main (primary branch)
 dev (staging before merge into master)
 
-Temporary Branches:
+Branches:
 
-feature/... (specific features and tasks)
-bugfix/... (quick fixes that don't need immediate resolution, --> dev --> main)
+wip/... (experimental functionality or preparation that is not ready for release to main branch)
+feature/... (specific features and tasks that are purposed for release into main branch)
+bug/... (quick/temporary fixes for minor issues into main branch)
+crit/... (vulnerability or broken functionality fixes that need immediate resolution into main branch)
 docs/... (docs changes)
-
-Commits:
-
-Start with...
-
-feat: ... (new feature)
-fix: ... (bug fix)
-perf: ... (performance improvement)
-refactor: ... (code changes that don't fix bugs or adds features)
-style: ... (whitespace, formatting)
-test: ... (testing code)
-docs: ... (for use with docs/... branches)
-other: ... (for things that deviate from the above)
-
-...then give a detailed explanation of what was done
